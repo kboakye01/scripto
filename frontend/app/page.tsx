@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useRef, useState } from "react";
@@ -15,12 +16,9 @@ export default function Home() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const generatorRef = useRef<HTMLDivElement>(null);
-  const howRef = useRef<HTMLDivElement>(null);
-  const pricingRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
 
-  function scrollToSection(ref: React.RefObject<HTMLDivElement | null>) {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
+  function scrollToGenerator() {
+    generatorRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -41,7 +39,7 @@ export default function Home() {
     }
 
     setAnalysis(
-      "Demo Analysis: The image appears ready for AI video generation. Recommended voice: calm, confident, natural tone."
+      "Demo Analysis: This photo is ready for AI video generation. Recommended voice: calm, confident, natural tone."
     );
     setVoiceStyle("Young Male - Calm");
   }
@@ -121,8 +119,7 @@ export default function Home() {
     const canvasElement = canvasRef.current;
     if (!canvasElement) return;
 
-    const context = canvasElement.getContext("2d");
-    if (!context) return;
+    const context = canvasElement.getContext("2d") as CanvasRenderingContext2D;
 
     canvasElement.width = 1080;
     canvasElement.height = 1920;
@@ -141,7 +138,7 @@ export default function Home() {
 
     const chunks: Blob[] = [];
 
-    recorder.ondataavailable = (event) => {
+    recorder.ondataavailable = (event: BlobEvent) => {
       if (event.data.size > 0) chunks.push(event.data);
     };
 
@@ -228,7 +225,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
-      <nav className="md:sticky md:top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-blue-100">
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-lg">
@@ -237,15 +234,8 @@ export default function Home() {
             <h1 className="text-2xl font-bold">Scripto</h1>
           </div>
 
-          <div className="hidden md:flex gap-8 text-sm font-semibold">
-            <button onClick={() => scrollToSection(featuresRef)}>Product</button>
-            <button onClick={() => scrollToSection(howRef)}>How it Works</button>
-            <button onClick={() => scrollToSection(pricingRef)}>Pricing</button>
-            <button onClick={() => scrollToSection(generatorRef)}>Generate</button>
-          </div>
-
           <button
-            onClick={() => scrollToSection(generatorRef)}
+            onClick={scrollToGenerator}
             className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg"
           >
             Get Started
@@ -253,47 +243,43 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="relative overflow-hidden px-6 pt-24 pb-24 text-center bg-[radial-gradient(circle_at_center,#dbeafe_0%,#ffffff_45%,#ffffff_100%)]">
-        <div className="absolute inset-x-0 bottom-0 h-80 bg-gradient-to-t from-blue-600 via-blue-400 to-transparent opacity-90" />
+      <section className="px-6 pt-24 pb-24 text-center bg-[radial-gradient(circle_at_center,#dbeafe_0%,#ffffff_45%,#ffffff_100%)]">
+        <p className="inline-flex bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-sm font-bold">
+          AI VIDEO GENERATOR
+        </p>
 
-        <div className="relative z-10 max-w-6xl mx-auto">
-          <p className="inline-flex bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-sm font-bold">
-            AI VIDEO GENERATOR
-          </p>
+        <h2 className="text-5xl md:text-7xl font-black mt-6 leading-tight tracking-tight">
+          Turn Photos & Scripts
+          <br />
+          Into <span className="text-blue-600">AI-Ready Videos</span>
+        </h2>
 
-          <h2 className="text-5xl md:text-7xl font-black mt-6 leading-tight tracking-tight">
-            Turn Photos & Scripts
-            <br />
-            Into <span className="text-blue-600">AI-Ready Videos</span>
-          </h2>
+        <p className="text-slate-600 mt-6 max-w-2xl mx-auto text-lg">
+          Upload a photo, paste your transcript, choose a voice style, and
+          create a demo video.
+        </p>
 
-          <p className="text-slate-600 mt-6 max-w-2xl mx-auto text-lg">
-            Upload a photo, paste your transcript, choose a voice style, and
-            create a demo video now.
-          </p>
-
-          <button
-            onClick={() => scrollToSection(generatorRef)}
-            className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl"
-          >
-            Get Started Free →
-          </button>
-        </div>
+        <button
+          onClick={scrollToGenerator}
+          className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl"
+        >
+          Get Started Free →
+        </button>
       </section>
 
-      <section ref={howRef} className="px-6 py-24 bg-white">
+      <section className="px-6 py-24 bg-white">
         <h2 className="text-4xl font-black text-center">
-          Follow These Steps To Create Your Video
+          Follow These Steps
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-12">
           <StepCard number="1" icon="📸" title="Upload Photo" text="Choose a clear photo." />
-          <StepCard number="2" icon="🎙️" title="Play Voice" text="Use browser demo voice to speak your transcript." />
+          <StepCard number="2" icon="🎙️" title="Play Voice" text="Use browser demo voice." />
           <StepCard number="3" icon="🎬" title="Generate Video" text="Create a downloadable demo video." />
         </div>
       </section>
 
-      <section ref={featuresRef} className="px-6 py-24 bg-gradient-to-b from-white to-blue-50">
+      <section className="px-6 py-24 bg-gradient-to-b from-white to-blue-50">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-5xl font-black leading-tight">
@@ -436,13 +422,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={pricingRef} className="px-6 py-24 bg-blue-50 text-center">
-        <h2 className="text-4xl font-black">Simple Pricing</h2>
-        <p className="mt-4 text-slate-600">
-          Free demo now. Real AI voice and avatar generation can be added later.
-        </p>
-      </section>
-
       <footer className="bg-slate-950 text-white px-6 py-10 text-center">
         <h3 className="text-2xl font-bold">Scripto</h3>
         <p className="text-slate-400 mt-2">
@@ -467,7 +446,7 @@ function StepCard({
   text: string;
 }) {
   return (
-    <div className="bg-white rounded-[2rem] shadow-xl p-8 border border-blue-50 hover:shadow-2xl transition">
+    <div className="bg-white rounded-[2rem] shadow-xl p-8 border border-blue-50">
       <div className="flex items-center justify-between">
         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">
           {number}
