@@ -10,7 +10,6 @@ export default function Home() {
   const [status, setStatus] = useState("idle");
   const [videoReady, setVideoReady] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [mode, setMode] = useState<"demo" | "avatar">("demo");
   const [voiceStyle, setVoiceStyle] = useState("Young Male - Calm");
   const [analysis, setAnalysis] = useState<string | null>(null);
 
@@ -42,7 +41,7 @@ export default function Home() {
     }
 
     setAnalysis(
-      "Demo Analysis: The image appears to show a young adult. Recommended voice: calm, confident, natural tone."
+      "Demo Analysis: The image appears ready for AI video generation. Recommended voice: calm, confident, natural tone."
     );
     setVoiceStyle("Young Male - Calm");
   }
@@ -75,13 +74,8 @@ export default function Home() {
   }
 
   async function generateVideo() {
-    if (!selectedFile || !image || !script.trim() || !canvasRef.current) {
+    if (!selectedFile || !image || !script.trim()) {
       alert("Please upload a photo and enter a transcript.");
-      return;
-    }
-
-    if (mode === "avatar") {
-      alert("AI Avatar Mode will work after we connect Tavus, HeyGen, or D-ID API.");
       return;
     }
 
@@ -124,24 +118,23 @@ export default function Home() {
   }
 
   async function createDemoVideo(imageUrl: string, transcript: string) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const context = canvasElement.getContext("2d");
+    if (!context) return;
 
-    canvas.width = 1080;
-    canvas.height = 1920;
+    canvasElement.width = 1080;
+    canvasElement.height = 1920;
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.src = imageUrl;
 
     await new Promise<void>((resolve) => {
       img.onload = () => resolve();
     });
 
-    const stream = canvas.captureStream(30);
+    const stream = canvasElement.captureStream(30);
     const recorder = new MediaRecorder(stream, {
       mimeType: "video/webm",
     });
@@ -154,44 +147,43 @@ export default function Home() {
 
     recorder.onstop = () => {
       const blob = new Blob(chunks, { type: "video/webm" });
-      const url = URL.createObjectURL(blob);
-      setVideoUrl(url);
+      setVideoUrl(URL.createObjectURL(blob));
     };
 
     const words = transcript.split(" ");
     const duration = Math.max(6, words.length * 0.35);
     const fps = 30;
     const totalFrames = duration * fps;
+    let frame = 0;
 
     recorder.start();
-
-    let frame = 0;
 
     await new Promise<void>((resolve) => {
       function draw() {
         const progress = frame / totalFrames;
 
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#020617";
+        context.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
         const zoom = 1 + progress * 0.08;
-        const imgW = canvas.width * zoom;
-        const imgH = canvas.height * zoom;
-        const x = (canvas.width - imgW) / 2;
-        const y = (canvas.height - imgH) / 2;
+        const imgW = canvasElement.width * zoom;
+        const imgH = canvasElement.height * zoom;
+        const x = (canvasElement.width - imgW) / 2;
+        const y = (canvasElement.height - imgH) / 2;
 
-        ctx.drawImage(img, x, y, imgW, imgH);
+        context.drawImage(img, x, y, imgW, imgH);
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.62)";
-        ctx.fillRect(70, 1320, 940, 420);
+        context.fillStyle = "rgba(0, 0, 0, 0.62)";
+        context.fillRect(70, 1320, 940, 420);
 
-        ctx.fillStyle = "white";
-        ctx.font = "bold 54px Arial";
-        ctx.textAlign = "center";
+        context.fillStyle = "white";
+        context.font = "bold 54px Arial";
+        context.textAlign = "center";
 
         const currentWords = Math.floor(progress * words.length);
         const visibleText = words.slice(0, currentWords + 1).join(" ");
-        wrapText(ctx, visibleText, 540, 1430, 850, 68);
+
+        wrapText(context, visibleText, 540, 1430, 850, 68);
 
         frame++;
 
@@ -208,7 +200,7 @@ export default function Home() {
   }
 
   function wrapText(
-    ctx: CanvasRenderingContext2D,
+    context: CanvasRenderingContext2D,
     text: string,
     x: number,
     y: number,
@@ -220,10 +212,10 @@ export default function Home() {
 
     for (let i = 0; i < words.length; i++) {
       const testLine = line + words[i] + " ";
-      const metrics = ctx.measureText(testLine);
+      const metrics = context.measureText(testLine);
 
       if (metrics.width > maxWidth && i > 0) {
-        ctx.fillText(line, x, y);
+        context.fillText(line, x, y);
         line = words[i] + " ";
         y += lineHeight;
       } else {
@@ -231,7 +223,7 @@ export default function Home() {
       }
     }
 
-    ctx.fillText(line, x, y);
+    context.fillText(line, x, y);
   }
 
   return (
@@ -265,14 +257,9 @@ export default function Home() {
         <div className="absolute inset-x-0 bottom-0 h-80 bg-gradient-to-t from-blue-600 via-blue-400 to-transparent opacity-90" />
 
         <div className="relative z-10 max-w-6xl mx-auto">
-          <div className="flex justify-center gap-3 flex-wrap">
-            <p className="inline-flex bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-sm font-bold">
-              AI VIDEO GENERATOR
-            </p>
-            <p className="inline-flex bg-white text-blue-700 px-5 py-2 rounded-full text-sm font-bold shadow">
-              ⚡ AI-Ready Demo Mode
-            </p>
-          </div>
+          <p className="inline-flex bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-sm font-bold">
+            AI VIDEO GENERATOR
+          </p>
 
           <h2 className="text-5xl md:text-7xl font-black mt-6 leading-tight tracking-tight">
             Turn Photos & Scripts
@@ -281,58 +268,16 @@ export default function Home() {
           </h2>
 
           <p className="text-slate-600 mt-6 max-w-2xl mx-auto text-lg">
-            Upload a photo, paste your transcript, analyze the image, choose a
-            voice style, and create a demo video now. Real voice and moving lips
-            will connect later with APIs.
+            Upload a photo, paste your transcript, choose a voice style, and
+            create a demo video now.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-            <button
-              onClick={() => scrollToSection(generatorRef)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl"
-            >
-              Get Started Free →
-            </button>
-
-            <button
-              onClick={() => scrollToSection(howRef)}
-              className="bg-white/90 hover:bg-white border border-blue-100 px-8 py-4 rounded-2xl font-bold shadow-lg"
-            >
-              ▶ See How It Works
-            </button>
-          </div>
-
-          <div className="relative mt-14 max-w-5xl mx-auto">
-            <div className="absolute -inset-6 bg-blue-500 blur-3xl opacity-40 rounded-full" />
-
-            <div className="relative rounded-[2rem] border-4 border-blue-600 shadow-2xl overflow-hidden bg-slate-950">
-              <div className="h-[360px] md:h-[520px] flex items-center justify-center relative">
-                {image ? (
-                  <img
-                    src={image}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-white text-center px-6">
-                    <div className="w-20 h-20 bg-blue-600 rounded-full mx-auto flex items-center justify-center text-3xl mb-5 shadow-xl">
-                      ▶
-                    </div>
-                    <p className="text-2xl font-bold">
-                      Your AI video preview will appear here
-                    </p>
-                    <p className="text-slate-400 mt-2">
-                      Upload a photo below to preview it inside the video frame.
-                    </p>
-                  </div>
-                )}
-
-                <div className="absolute top-6 left-6 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-bold">
-                  Live Preview
-                </div>
-              </div>
-            </div>
-          </div>
+          <button
+            onClick={() => scrollToSection(generatorRef)}
+            className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl"
+          >
+            Get Started Free →
+          </button>
         </div>
       </section>
 
@@ -342,25 +287,17 @@ export default function Home() {
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-12">
-          <StepCard number="1" icon="📸" title="Upload Photo" text="Choose a clear front-facing photo." />
-          <StepCard number="2" icon="🧠" title="Analyze Photo" text="Demo AI analysis recommends a voice style." />
-          <StepCard number="3" icon="🎙️" title="Play Voice" text="Use browser demo voice to speak your transcript." />
+          <StepCard number="1" icon="📸" title="Upload Photo" text="Choose a clear photo." />
+          <StepCard number="2" icon="🎙️" title="Play Voice" text="Use browser demo voice to speak your transcript." />
+          <StepCard number="3" icon="🎬" title="Generate Video" text="Create a downloadable demo video." />
         </div>
       </section>
 
-      <section
-        ref={featuresRef}
-        className="px-6 py-24 bg-gradient-to-b from-white to-blue-50"
-      >
+      <section ref={featuresRef} className="px-6 py-24 bg-gradient-to-b from-white to-blue-50">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="inline-flex bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-sm font-bold">
-              POWERFUL FEATURES
-            </p>
-
-            <h2 className="text-5xl font-black mt-6 leading-tight">
-              Built For{" "}
-              <span className="text-blue-600">Real AI APIs Later</span>
+            <h2 className="text-5xl font-black leading-tight">
+              Built For <span className="text-blue-600">Real AI APIs Later</span>
             </h2>
 
             <p className="text-slate-600 mt-5 text-lg">
@@ -369,9 +306,9 @@ export default function Home() {
             </p>
 
             <div className="mt-8 space-y-5">
-              <Feature title="Mock Photo Analysis" text="Shows AI-style analysis without paid API usage." />
-              <Feature title="Browser Demo Voice" text="Plays your transcript with built-in browser speech." />
-              <Feature title="Supabase Backend" text="Save images and transcripts automatically." />
+              <Feature title="Photo Upload" text="Upload and preview selected images." />
+              <Feature title="Browser Demo Voice" text="Plays your transcript using browser speech." />
+              <Feature title="Supabase Backend" text="Saves images and transcripts automatically." />
             </div>
           </div>
 
@@ -395,43 +332,7 @@ export default function Home() {
             Generate Your Demo Video
           </h2>
 
-          <p className="text-center text-slate-600 mt-3">
-            This free version plays demo voice in your browser and creates a
-            downloadable captions video.
-          </p>
-
           <div className="space-y-6 mt-10">
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setMode("demo")}
-                className={`rounded-2xl p-5 font-bold border ${
-                  mode === "demo"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-slate-700 border-blue-100"
-                }`}
-              >
-                Demo Mode
-              </button>
-
-              <button
-                onClick={() => setMode("avatar")}
-                className={`rounded-2xl p-5 font-bold border ${
-                  mode === "avatar"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-slate-700 border-blue-100"
-                }`}
-              >
-                AI Avatar Mode
-              </button>
-            </div>
-
-            {mode === "avatar" && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-2xl p-5 font-semibold">
-                AI Avatar Mode is ready in the UI, but real moving lips need
-                Tavus, HeyGen, or D-ID API later.
-              </div>
-            )}
-
             <label className="block border-2 border-dashed border-blue-200 rounded-2xl p-8 text-center cursor-pointer hover:bg-blue-50">
               <input
                 type="file"
@@ -447,9 +348,7 @@ export default function Home() {
                     alt="Selected"
                     className="w-full max-h-80 object-cover rounded-2xl mb-4"
                   />
-                  <p className="font-bold text-green-600">
-                    Photo selected ✅
-                  </p>
+                  <p className="font-bold text-green-600">Photo selected ✅</p>
                   <p className="text-sm text-slate-500 mt-1">
                     {selectedFile?.name}
                   </p>
@@ -477,33 +376,25 @@ export default function Home() {
               </div>
             )}
 
-            <div>
-              <label className="font-bold">Voice Style</label>
-              <select
-                value={voiceStyle}
-                onChange={(e) => setVoiceStyle(e.target.value)}
-                className="w-full mt-2 border border-blue-100 rounded-2xl p-4 outline-none focus:ring-4 focus:ring-blue-100"
-              >
-                <option>Young Male - Calm</option>
-                <option>Young Male - Energetic</option>
-                <option>Mature Male - Deep</option>
-                <option>Young Female - Friendly</option>
-                <option>Mature Female - Professional</option>
-                <option>Neutral Voice - Natural</option>
-              </select>
-            </div>
+            <select
+              value={voiceStyle}
+              onChange={(e) => setVoiceStyle(e.target.value)}
+              className="w-full border border-blue-100 rounded-2xl p-4 outline-none focus:ring-4 focus:ring-blue-100"
+            >
+              <option>Young Male - Calm</option>
+              <option>Young Male - Energetic</option>
+              <option>Mature Male - Deep</option>
+              <option>Young Female - Friendly</option>
+              <option>Mature Female - Professional</option>
+              <option>Neutral Voice - Natural</option>
+            </select>
 
-            <div>
-              <textarea
-                value={script}
-                onChange={(e) => setScript(e.target.value)}
-                placeholder="Paste your transcript here..."
-                className="w-full h-44 border border-blue-100 rounded-2xl p-5 outline-none focus:ring-4 focus:ring-blue-100"
-              />
-              <p className="text-sm text-slate-500 mt-2">
-                {script.length} characters
-              </p>
-            </div>
+            <textarea
+              value={script}
+              onChange={(e) => setScript(e.target.value)}
+              placeholder="Paste your transcript here..."
+              className="w-full h-44 border border-blue-100 rounded-2xl p-5 outline-none focus:ring-4 focus:ring-blue-100"
+            />
 
             <button
               onClick={speakTranscript}
@@ -519,12 +410,6 @@ export default function Home() {
             >
               {status === "processing" ? "Creating Demo Video..." : "Generate Demo Video"}
             </button>
-
-            {status === "processing" && (
-              <div className="text-center bg-blue-50 border border-blue-100 rounded-2xl p-5 text-blue-700 font-bold">
-                Saving to Supabase and creating your demo video...
-              </div>
-            )}
 
             {videoReady && videoUrl && (
               <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
@@ -556,13 +441,6 @@ export default function Home() {
         <p className="mt-4 text-slate-600">
           Free demo now. Real AI voice and avatar generation can be added later.
         </p>
-
-        <button
-          onClick={() => scrollToSection(generatorRef)}
-          className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl"
-        >
-          Start Free
-        </button>
       </section>
 
       <footer className="bg-slate-950 text-white px-6 py-10 text-center">
